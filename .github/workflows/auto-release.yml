@@ -27,6 +27,8 @@ jobs:
   auto-release:
     name: Bump, tag & release
     runs-on: ubuntu-latest
+    outputs:
+      versao: ${{ steps.keep.outputs.next }}
     # não re-disparar sobre o commit de bump feito pelo próprio bot
     if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip release]')"
     permissions:
@@ -106,4 +108,10 @@ jobs:
   publicar:
     needs: auto-release
     uses: ./.github/workflows/deploy-ha.yml
+    # A versão TEM de ser repassada: chamado por `workflow_call` não existe
+    # `github.event.release`, e sem isto o publicador cai no
+    # `available_version` do HACS — que é a versão VELHA no exato instante em
+    # que a nova acabou de sair. Visto em 2026-09-09.
+    with:
+      versao: ${{ needs.auto-release.outputs.versao }}
     secrets: inherit

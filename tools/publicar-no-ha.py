@@ -50,7 +50,11 @@ async def main():
             meu = next((r for r in repos if r.get("full_name") == REPO), None)
         if not meu:
             raise SystemExit("HACS não enxerga o repositório")
-        alvo = VERSAO or meu.get("available_version") or ""
+        # `available_version` do HACS vem COM o "v" ("v0.1.0"); `VERSAO` vem
+        # sem. Sem esta normalização o script monta "vv0.1.0", procura
+        # `VERSION = "v0.1.0"` no arquivo e nunca acha — falhando com o
+        # componente correto no ar. Visto em 2026-09-09.
+        alvo = (VERSAO or meu.get("available_version") or "").lstrip("v")
         print(f"· HACS id={meu['id']} instalada={meu.get('installed_version')} alvo={alvo}")
         # versão explícita contorna o available_version velho em cache logo
         # depois de publicar a release
