@@ -6,7 +6,7 @@ description: Mexer no MW Barometer Card — o mostrador aneroide do Home Assista
 # MW Barometer Card
 
 Mostrador em **SVG**, dois ponteiros, previsão Zambretti. A fábrica geral está
-em [`mw-clima`](../mw-clima/SKILL.md); aqui ficam só as coisas deste repositório.
+em **`mw-clima`** (canônica no harness, publicada em `~/.claude/skills`); aqui ficam só as coisas deste repositório.
 
 ## Pré-condições
 
