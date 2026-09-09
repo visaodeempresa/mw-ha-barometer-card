@@ -1,0 +1,18 @@
+# O barômetro alimentado pela integração MW Letícia Weather: só `entity`, porque
+# a pressão de 3 h atrás já vem no atributo do próprio sensor.
+type: custom:mw-barometer-card
+entity: sensor.tempo_aguas_claras_pressao_ao_nivel_do_mar
+temperatura_entity: sensor.tempo_aguas_claras_temperatura
+umidade_entity: sensor.tempo_aguas_claras_umidade
+vento_entity: sensor.tempo_aguas_claras_direcao_do_vento
+acabamento: latao
+tamanho: grande
+---
+# O mesmo instrumento em tema escuro, com um BME280 local. Note o `altitude`:
+# sensor físico entrega pressão de ESTAÇÃO, e o card precisa saber a altitude
+# para avisar em vez de desenhar errado.
+type: custom:mw-barometer-card
+entity: sensor.bme280_pressao
+acabamento: latao-noite
+altitude: 1200
+unidade_pressao: mmHg

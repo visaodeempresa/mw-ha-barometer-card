@@ -1,0 +1,102 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bancada — MW Barometer Card</title>
+<style>
+  :root { color-scheme: light; --primary-text-color:#212121; --secondary-text-color:#727272;
+          --card-background-color:#fff; --ha-card-background:#fff; --primary-color:#03a9f4;
+          --error-color:#db4437; --divider-color:#e0e0e0; --ha-card-border-radius:12px; }
+  html[data-tema="escuro"] { color-scheme: dark; --primary-text-color:#e1e1e1;
+          --secondary-text-color:#9b9b9b; --card-background-color:#1c1c1e;
+          --ha-card-background:#1c1c1e; --divider-color:#333; }
+  body { margin:0; font:14px/1.4 -apple-system,system-ui,sans-serif;
+         background: var(--card-background-color); color: var(--primary-text-color); }
+  .barra { position:sticky; top:0; z-index:9; display:flex; gap:8px; flex-wrap:wrap;
+           padding:10px 14px; background:var(--card-background-color);
+           border-bottom:1px solid var(--divider-color); align-items:center; }
+  button { font:inherit; padding:5px 10px; border-radius:8px; cursor:pointer;
+           border:1px solid var(--divider-color); background:transparent;
+           color:var(--primary-text-color); }
+  .grade { display:flex; flex-wrap:wrap; gap:18px; padding:18px; align-items:flex-start; }
+  .celula { width:var(--largura,320px); }
+  .celula h3 { margin:0 0 6px; font-size:12px; font-weight:600; letter-spacing:.4px;
+               text-transform:uppercase; color:var(--secondary-text-color); }
+</style>
+<div class="barra">
+  <button onclick="tema()">alternar tema</button>
+  <button onclick="largura(1180)">1180</button>
+  <button onclick="largura(768)">768</button>
+  <button onclick="largura(390)">390</button>
+  <button onclick="mexer(-6)">−6 hPa</button>
+  <button onclick="mexer(+6)">+6 hPa</button>
+  <button onclick="cenario('estacao')">pressão de estação (887)</button>
+  <button onclick="cenario('fora')">fora de escala</button>
+  <button onclick="cenario('real')">leitura real do dono</button>
+  <button onclick="so1()">um grande</button>
+  <span id="eco"></span>
+</div>
+<div class="grade" id="grade"></div>
+<script>
+  // Dublê de <ha-card>: o suficiente para o card montar fora do HA.
+  customElements.define("ha-card", class extends HTMLElement {
+    connectedCallback(){ this.style.display="block";
+      this.style.background="var(--ha-card-background)";
+      this.style.borderRadius="var(--ha-card-border-radius)";
+      this.style.boxShadow="0 1px 3px rgba(0,0,0,.16)"; }
+  });
+  customElements.define("ha-form", class extends HTMLElement {});
+</script>
+<script src="dist/mw-barometer-card.js"></script>
+<script>
+  let pressao = 1019.9, anterior = 1020.3, temp = 21, umid = 73, vento = 90;
+  const hass = () => ({
+    config: { latitude: -15.83985, longitude: -48.03618, elevation: 1200 },
+    states: {
+      "sensor.pressao": { state: String(pressao),
+        attributes: { unit_of_measurement: "hPa", device_class: "atmospheric_pressure",
+                      pressao_3h_atras: anterior, friendly_name: "Pressão" } },
+      "sensor.temp": { state: String(temp), attributes: { unit_of_measurement: "°C" } },
+      "sensor.umid": { state: String(umid), attributes: { unit_of_measurement: "%" } },
+      "sensor.vento": { state: String(vento), attributes: { unit_of_measurement: "°" } },
+    },
+  });
+  const acabamentos = ["latao", "latao-noite", "aco", "papel"];
+  const cartoes = [];
+  function montar() {
+    const g = document.getElementById("grade"); g.innerHTML = ""; cartoes.length = 0;
+    for (const a of acabamentos) {
+      const cel = document.createElement("div"); cel.className = "celula";
+      cel.innerHTML = "<h3>" + a + "</h3>";
+      const c = document.createElement("mw-barometer-card");
+      c.setConfig({ type: "custom:mw-barometer-card", entity: "sensor.pressao",
+        acabamento: a, temperatura_entity: "sensor.temp", umidade_entity: "sensor.umid",
+        vento_entity: "sensor.vento", tamanho: "medio" });
+      c.hass = hass(); cel.appendChild(c); g.appendChild(cel); cartoes.push(c);
+    }
+    eco();
+  }
+  function eco(){ document.getElementById("eco").textContent =
+    pressao.toFixed(1) + " hPa · ref " + anterior.toFixed(1) + " · Δ " + (pressao-anterior).toFixed(1); }
+  function atualizar(){ cartoes.forEach(c => { c.hass = hass(); }); eco(); }
+  function mexer(d){ pressao = Math.round((pressao + d) * 10) / 10; atualizar(); }
+  function cenario(q){
+    if (q === "estacao") { pressao = 887.2; anterior = 887.6; }
+    if (q === "fora")    { pressao = 1060;  anterior = 1055; }
+    if (q === "real")    { pressao = 1019.9; anterior = 1020.3; }
+    atualizar();
+  }
+  function tema(){ const h=document.documentElement;
+    h.dataset.tema = h.dataset.tema === "escuro" ? "" : "escuro"; }
+  function largura(px){ document.documentElement.style.setProperty("--largura", px===1180?"320px":px===768?"260px":"200px");
+    document.querySelectorAll(".celula").forEach(c=>c.style.width=`var(--largura)`); }
+  function so1(){
+    const g=document.getElementById("grade"); g.innerHTML=""; cartoes.length=0;
+    const cel=document.createElement("div"); cel.className="celula";
+    cel.style.width="420px"; cel.innerHTML="<h3>latão · grande</h3>";
+    const c=document.createElement("mw-barometer-card");
+    c.setConfig({type:"custom:mw-barometer-card",entity:"sensor.pressao",acabamento:"latao",
+      temperatura_entity:"sensor.temp",umidade_entity:"sensor.umid",
+      vento_entity:"sensor.vento",tamanho:"grande"});
+    c.hass=hass(); cel.appendChild(c); g.appendChild(cel); cartoes.push(c); eco();
+  }
+  montar();
+</script>
