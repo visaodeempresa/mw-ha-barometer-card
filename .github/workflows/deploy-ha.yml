@@ -33,12 +33,18 @@ on:
     inputs:
       versao: { description: "versão a instalar (ex.: 0.2.0)", required: false }
 
+# Duas publicações simultâneas mandariam o HACS baixar duas versões na
+# mesma casa. Uma por vez, e a última é a que vale.
+concurrency:
+  group: deploy-ha
+  cancel-in-progress: true
+
 jobs:
   publicar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: pip install -q websockets
       - name: HACS baixa e o cache é furado
