@@ -19,6 +19,15 @@ on:
   # recursão) — por isso o auto-release CHAMA este aqui em vez de confiar no
   # evento `release`. O evento fica para release feita à mão.
   workflow_call:
+    # O input PRECISA ser declarado aqui. Sem isto, o `with: versao:` do
+    # auto-release deixa a esteira inteira em `startup_failure` — o GitHub
+    # recusa o arquivo antes de rodar qualquer passo, e a mensagem não diz
+    # qual workflow está errado. Medido em 2026-09-10.
+    inputs:
+      versao:
+        description: "versão a instalar (ex.: 0.2.0)"
+        required: false
+        type: string
   release: { types: [published] }
   workflow_dispatch:
     inputs:
